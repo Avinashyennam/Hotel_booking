@@ -1,11 +1,11 @@
 import mongoose, { Schema, Document } from 'mongoose';
-import bcrypt from 'bcrypt';
-
+import { IHotel } from './hotel';
 export interface IUser extends Document {
     email: string;
     password: string;
     firstName: string;
     lastName: string;
+    recentStays: mongoose.Types.ObjectId[];
 }
 
 const userSchema: Schema<IUser> = new mongoose.Schema({
@@ -37,6 +37,7 @@ const userSchema: Schema<IUser> = new mongoose.Schema({
         required: true,
         trim: true,
     },
+    recentStays: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Hotel' }]
 },
 {
     timestamps: true, // Automatically adds createdAt and updatedAt timestamps
