@@ -6,6 +6,8 @@ export interface IBooking extends Document {
     checkInDate: Date;
     checkOutDate: Date;
     guests: number;
+    isCanceled: boolean; // To mark if the booking is canceled
+    cancellationReason?: string; // Reason for cancellation (optional)
 }
 
 const bookingSchema: Schema<IBooking> = new mongoose.Schema({
@@ -13,7 +15,9 @@ const bookingSchema: Schema<IBooking> = new mongoose.Schema({
     hotel: { type: mongoose.Schema.Types.ObjectId, ref: 'Hotel', required: true },
     checkInDate: { type: Date, required: true },
     checkOutDate: { type: Date, required: true },
-    guests: { type: Number, required: true }
+    guests: { type: Number, required: true },
+    isCanceled: { type: Boolean, default: false }, // Initially not canceled
+    cancellationReason: { type: String } // Stores the reason for cancellation
 });
 
 export default mongoose.model<IBooking>('Booking', bookingSchema);

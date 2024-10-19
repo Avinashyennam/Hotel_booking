@@ -80,3 +80,56 @@ export const bookHotel = async (req: Request, res: Response) => {
         res.status(500).json({ message: 'Server error', error });
     }
 };
+
+// for cancellation
+// Retrieve the booking details based on the booking ID.
+// Validate that the booking belongs to the requesting user.
+// Ask for a reason for the cancellation.
+// Mark the booking as "canceled" in the database and store the cancellation reason.
+
+export const cancelBooking = async (req: Request, res: Response) => {
+    try {
+        const { bookingId, userId, cancellationReason } = req.body;
+
+        // Find the booking by ID and ensure the user matches
+        const booking = await Booking.findById(bookingId);
+        if (!booking) {
+            res.status(404).json({ message: 'Booking not found.' });
+            return;
+        }
+
+        // Ensure that the booking belongs to the user who is trying to cancel
+        if (booking.user.toString() !== userId) {
+            res.status(403).json({ message: 'You do not have permission to cancel this booking.' });
+            return;
+        }
+
+        // Check if the booking is already canceled
+        if (booking.isCanceled) {
+            res.status(400).json({ message: 'Booking is already canceled.' });
+            return;
+        }
+
+        // Update the booking to mark it as canceled and store the cancellation reason
+        booking.isCanceled = true;
+        booking.cancellationReason = cancellationReason;
+
+        // Save the updated booking
+        await booking.save();
+
+        // removing booked hotel from recent stays
+        const userStaysAfterCancellation = await User.findByIdAndUpdate(
+            userId,
+            { $pull: { recentStays: booking.hotel } }, // $pull removes the hotelId from recentStays
+            { new: true } // Returns the updated user object
+        );
+        res.status(200).json({
+            message: 'Booking canceled successfully and hotel removed from recent stays.',
+            booking,
+            updatedUser: userStaysAfterCancellation
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error });
+    }
+};
