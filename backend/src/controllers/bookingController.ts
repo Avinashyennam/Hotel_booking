@@ -63,6 +63,12 @@ export const bookHotel = async (req: Request, res: Response) => {
 
         // Save the booking to the database
         await booking.save();
+        // Update the user's recentStay array by adding the hotelId
+        const userstays = await User.findByIdAndUpdate(
+            userId,
+            { $addToSet: { recentStays: hotelId } }, // $addToSet ensures no duplicates
+            { new: true } // Returns the updated user object
+        );
 
         // Respond with the booking details
         res.status(201).json({
