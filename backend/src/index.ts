@@ -4,6 +4,7 @@ import cors from 'cors';
 import mongoose from 'mongoose';
 import userRoutes from './routes/userRoute';
 import hotelRoutes from './routes/hotelRoute';
+import bookingRoute from "./routes/bookingRoute";
 // Load environment variables
 dotenv.config();
 // Create an Express app
@@ -36,6 +37,7 @@ app.get('/', (req: Request, res: Response) => {
 });
 app.use("/api/users", userRoutes);
 app.use("/api/hotels", hotelRoutes);
+app.use("/api/booking", bookingRoute);
 
 const PORT = 3000;
 app.listen(PORT, () => {
