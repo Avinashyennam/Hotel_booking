@@ -1,42 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import Hotel from "../models/hotel";
+import { triggerAsyncId } from "async_hooks";
 
-// export const addHotel = async (req: Request, res: Response) => {
-//     try {
-//         const newHotel = new Hotel({
-//             name: 'Grand Palace Hotel',
-//             description: 'A luxurious stay with modern amenities.',
-//             location: 'New York, USA',
-//             price: 250,
-//             images: ['image1.jpg', 'image2.jpg'],
-//             amenities: [
-//                 'Power Backup',
-//                 'Elevator/Lift',
-//                 'Refrigerator',
-//                 'Housekeeping',
-//                 'Room Service',
-//                 'Smoke Detector',
-//                 'Laundry Service',
-//                 'Air Conditioning',
-//                 'Free Wi-Fi',
-//                 'Newspaper',
-//                 'Free Parking',
-//                 'Restaurant',
-//                 'Dining Area'
-//             ],
-//             fits: 4
-//         });
-
-//         const savedHotel = await newHotel.save();
-//         console.log('Hotel created successfully:', savedHotel);
-//         res.status(200).json({savedHotel});
-//         return;
-//     } catch (error) {
-//         console.error('Error creating hotel:', error);
-//         res.status(500).json({message: "Internal server error"});
-//     }
-// }
-
+// route to creating new hotel
 export const addHotel = async (req: Request, res: Response) => {
     try {
         // Destructuring hotel details from req.body
@@ -67,7 +33,8 @@ export const addHotel = async (req: Request, res: Response) => {
     }
 };
 
-export const getHotel = async (req: Request, res: Response) => {
+// route to get all hotels
+export const getHotels = async (req: Request, res: Response) => {
     try {
         const hotels = await Hotel.find();
         res.status(200).json({hotels});
@@ -75,5 +42,77 @@ export const getHotel = async (req: Request, res: Response) => {
     } catch (error) {
         console.log("Error getting hotels", error);
         res.status(500).json({message: "server error"});
+    }
+}
+
+// route to get a specific hotel
+export const getHotel = async (req: Request, res: Response):Promise<void> =>{
+    try {
+        const {id} = req.params;
+        const hotel = await Hotel.findById(id);
+        if(!hotel){
+            res.status(404).json({message: "hotel not found"});
+            return;
+        }
+        res.status(200). json({message: hotel});
+    } catch (error) {
+        console.log("error getting hotel", error);
+        res.status(500).json({message: "Internal server error at getting hotel"});
+    }
+}
+
+// route to update hotel
+export const updateHotel = async (req: Request, res: Response):Promise<void> => {
+    try {
+        // Get the hotel id from the request parameters
+        const { id } = req.params;
+
+        // Get the fields to update from the request body
+        const updates = req.body;
+
+        // Find the hotel by ID and update the fields
+        const updatedHotel = await Hotel.findByIdAndUpdate(id, updates, {
+            new: true, // Returns the updated document
+            runValidators: true // Ensures validations are run
+        });
+
+        // If the hotel was not found, return a 404
+        if (!updatedHotel) {
+            res.status(404).json({ message: 'Hotel not found' });
+            return;
+        }
+
+        // Return the updated hotel data
+        res.status(200).json({
+            message: 'Hotel updated successfully',
+            hotel: updatedHotel
+        });
+        return;
+    } catch (error) {
+        // Error handling
+        console.error(error);
+        res.status(500).json({ message: 'Server error', error });
+        return;
+    }
+};
+
+// route to delete a hotel
+export const deleteHotel = async (req: Request, res: Response):Promise<void> => {
+    try {
+        const {id} = req.params;
+        const deletedHotel = await Hotel.findByIdAndDelete(id);
+        /* findByIdAndDelete: This method is used to find a document by its ID and delete it.
+        It returns the deleted document, so you can check if the hotel existed before trying
+        to delete it.
+        */
+        if(!deletedHotel){
+            res.status(404).json({message: "Hotel not found"});
+            return;
+        }
+        res.status(200).json({message: "Hotel deleted successfully"});
+        return;
+    } catch (error) {
+        console.log("Error deleting hotel", error);
+        res.status(500).json({message: "Internal server error at deleting hotel"});
     }
 }
